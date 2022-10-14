@@ -85,7 +85,7 @@ def blog_delete(id):
     db.session.delete(blog)
     db.session.commit()
 
-    return "Blog was deleted"
+    return "Blog was successfully deleted"
 
 
 '''
@@ -138,13 +138,21 @@ def add_user():
     email = request.json['email'] 
     password = request.json['password']
 
-    new_user = User(name,email,password) 
-    db.session.add(new_user)
+    record = User(name, email, password) 
+    db.session.add(record)
     db.session.commit()
 
-    user = User.query.get(new_user.id)
+    # user = User.query.get(new_user.id)
 
-    return blog_schema.jsonify(user) 
+    return jsonify(user_schema.dump(record)) 
+
+
+# Endpoint to create a new user
+@app.route('/user', methods=["GET"])
+def user():
+    all=User.query.all()
+    return jsonify(users_schema.dump(all))  
+
 
 
 # Endpoint for updating a user
@@ -171,6 +179,14 @@ def get_allusers():
     return jsonify(result)
 
 
+# Endpoint for deleting a user
+@app.route("/user/<id>", methods=["DELETE"])
+def user_delete(id):
+    user = User.query.get(id)
+    db.session.delete(user)
+    db.session.commit()
+
+    return "User was successfully deleted"
 
 
 
