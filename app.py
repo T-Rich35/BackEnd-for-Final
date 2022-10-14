@@ -88,6 +88,94 @@ def blog_delete(id):
     return "Blog was deleted"
 
 
+'''
+ we get email and password from the body
+ we validate that the email and password match in the database
+ if it is correct to return in a json to the name of the user and his id
+ if it is not correct return a credential error 
+'''
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(70), unique=True)
+    email = db.Column(db.String(70), unique=True)
+    password = db.Column(db.String(50), nullable=False)
+
+    def __init__(self, name, email, password):
+        self.name = name
+        self.email = email
+        self.password = password 
+
+class UserSchema(ma.Schema):
+    class Meta:
+        fields = ('name', 'email', 'password')      
+
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+
+
+# Endpoint query login
+@app.route('/login', methods=["POST"])
+def read_user():
+    email = request.json['email'] 
+    password = request.json['password'] 
+    query = "SELECT * FROM user WHERE email = '{0}' AND password ='{1}' ".format(email,password)
+    results = db.session.execute(query)
+
+   
+    if results :
+        return  jsonify({"user_data":users_schema.dump(results)}) 
+
+    else :
+        return jsonify({'Message': "User not found.", 'successful': False})
+
+
+# Endpoint to create a new user
+@app.route('/user/add', methods=["POST"])
+def add_user():
+    name = request.json['name'] 
+    email = request.json['email'] 
+    password = request.json['password']
+
+    new_user = User(name,email,password) 
+    db.session.add(new_user)
+    db.session.commit()
+
+    user = User.query.get(new_user.id)
+
+    return blog_schema.jsonify(user) 
+
+
+# Endpoint for updating a user
+@app.route("/user/<id>", methods=["PUT"])
+def user_update(id):
+    user = User.query.get(id)
+    name = request.json['name']
+    email = request.json['email']
+    password = request.json['password']
+    name.name = name    
+    email.name = email    
+    password.name = password    
+
+    db.session.commit()
+    return user_schema.jsonify(user)
+
+
+# Endpoint to query all users
+@app.route("/users", methods=["GET"])
+def get_allusers():
+    all_users = User.query.all()
+    result = users_schema.dump(all_users)
+
+    return jsonify(result)
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
