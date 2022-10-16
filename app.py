@@ -1,3 +1,6 @@
+import email
+from enum import unique
+from unicodedata import name
 from flask import Flask,request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -99,7 +102,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(70), unique=True)
     email = db.Column(db.String(70), unique=True)
-    password = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(50), unique=False)
 
     def __init__(self, name, email, password):
         self.name = name
@@ -113,7 +116,6 @@ class UserSchema(ma.Schema):
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
-
 
 # Endpoint query login
 @app.route('/login', methods=["POST"])
@@ -131,64 +133,32 @@ def read_user():
         return jsonify({'Message': "User not found.", 'successful': False})
 
 
+
+
 # Endpoint to create a new user
-@app.route('/user/add', methods=["POST"])
+@app.route('/user', methods=["POST"])
 def add_user():
     name = request.json['name'] 
     email = request.json['email'] 
     password = request.json['password']
 
-    record = User(name, email, password) 
-    db.session.add(record)
+    new_user = User(name, email, password) 
+    db.session.add(new_user)
     db.session.commit()
 
-    # user = User.query.get(new_user.id)
+    user = User.query.get(new_user.id)
 
-    return jsonify(user_schema.dump(record)) 
-
-
-# Endpoint to create a new user
-@app.route('/user', methods=["GET"])
-def user():
-    all=User.query.all()
-    return jsonify(users_schema.dump(all))  
-
-
-
-# Endpoint for updating a user
-@app.route("/user/<id>", methods=["PUT"])
-def user_update(id):
-    user = User.query.get(id)
-    name = request.json['name']
-    email = request.json['email']
-    password = request.json['password']
-    name.name = name    
-    email.name = email    
-    password.name = password    
-
-    db.session.commit()
     return user_schema.jsonify(user)
 
 
-# Endpoint to query all users
-@app.route("/users", methods=["GET"])
-def get_allusers():
+
+   # Endpoint to query user
+@app.route("/user", methods=["GET"])
+def get_users():
     all_users = User.query.all()
     result = users_schema.dump(all_users)
 
-    return jsonify(result)
-
-
-# Endpoint for deleting a user
-@app.route("/user/<id>", methods=["DELETE"])
-def user_delete(id):
-    user = User.query.get(id)
-    db.session.delete(user)
-    db.session.commit()
-
-    return "User was successfully deleted"
-
-
+    return jsonify(result) 
 
 
 
