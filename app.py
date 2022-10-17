@@ -1,6 +1,3 @@
-import email
-from enum import unique
-from unicodedata import name
 from flask import Flask,request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -13,7 +10,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'ap
 
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-
 
 
 
@@ -34,6 +30,13 @@ class BlogSchema(ma.Schema):
 
 blog_schema = BlogSchema() 
 blogs_schema = BlogSchema(many=True) 
+
+# Endpoint for deleting a record
+@app.route("/", methods=["GET","POST"])
+def home():
+    return "Tarrance API is Working"
+
+
 
 
 # Endpoint to create a new blog
@@ -66,6 +69,20 @@ def get_allblogs():
 def get_blog(id):
     blog = Blog.query.get(id)
     return blog_schema.jsonify(blog)
+
+def read_blog(id):
+    try:
+        blog= db(id)
+        if blog != None:
+            return jsonify({'blog': blog, 'Message': "blog found.", 'successful': True})
+        else:
+            return jsonify({'Message': "blog not found.", 'successful': False})
+    except Exception as ex:
+        return jsonify({'Message': "Error", 'successful': False})
+
+
+
+
 
 
 # Endpoint for updating a blog
