@@ -1,6 +1,8 @@
 from flask import Flask,request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from flask import Flask
+from flask_cors import CORS
 import os
 
 app = Flask(__name__)
@@ -11,21 +13,23 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'ap
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
-
+CORS(app)
 
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, unique=False)
     content = db.Column(db.String, unique=False)
+    image = db.Column(db.String, unique=False)
 
-    def __init__(self, title, content):
+    def __init__(self, title, content, image):
         self.title = title
         self.content = content
+        self.image = image
 
 
 class BlogSchema(ma.Schema):
     class Meta:
-        fields = ("id", 'title', 'content')
+        fields = ("id", 'title', 'content','image')
 
 
 blog_schema = BlogSchema() 
@@ -44,8 +48,9 @@ def home():
 def add_blog():
     title = request.json['title']
     content = request.json['content']
+    image = request.json['image']
     
-    new_blog = Blog(title, content)
+    new_blog = Blog(title, content, image)
 
     db.session.add(new_blog)
     db.session.commit()
