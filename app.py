@@ -113,12 +113,7 @@ def blog_delete(id):
     return "Blog was successfully deleted"
 
 
-'''
- we get email and password from the body
- we validate that the email and password match in the database
- if it is correct to return in a json to the name of the user and his id
- if it is not correct return a credential error 
-'''
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -144,15 +139,21 @@ users_schema = UserSchema(many=True)
 def read_user():
     email = request.json['email'] 
     password = request.json['password'] 
-    query = "SELECT * FROM user WHERE email = '{0}' AND password ='{1}' ".format(email,password)
-    results = db.session.execute(query)
 
-   
-    if results :
-        return  jsonify({"user_data":users_schema.dump(results)}) 
+    user = db.session.query(User).filter(User.email == email).first()
 
-    else :
-        return jsonify({'Message': "User not found.", 'successful': False})
+    if user is None:
+        return jsonify({'successful': False})
+    if user.password !=password:
+        return jsonify({'successful': False})
+
+
+    return jsonify({ 'successful': True})
+
+
+
+
+
 
 
 
